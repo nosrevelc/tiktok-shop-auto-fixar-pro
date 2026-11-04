@@ -4,19 +4,19 @@
 
 ---
 
-## 🌟 Sobre o Projeto e Cortesia Bonsite
+## 🌟 Sobre o Projeto e Cortesia Bomsite
 
 Este utilitário foi baseado na ideia original de automação criada por **Uélinton Morelli** ([@soumorelli](https://www.instagram.com/soumorelli)).
 
-A versão **PRO (v3.1.0)** foi aprimorada, refatorada e disponibilizada publicamente como uma **cortesia da [Bonsite.shop](https://bonsite.shop)** para toda a comunidade de criadores, lojistas e streamers de Live Commerce.
+A versão **PRO (v3.1.0)** foi aprimorada, refatorada e disponibilizada publicamente como uma **cortesia da [Bomsite.shop](https://bomsite.shop)** para toda a comunidade de criadores, lojistas e streamers de Live Commerce.
 
-> 💡 **Conheça a Bonsite**: Especialistas em desenvolvimento web de alta performance, automações de vendas, criação de plataformas, e-commerces e integrações personalizadas para alavancar negócios digitais. Acesse: **[bonsite.shop](https://bonsite.shop)**.
+> 💡 **Conheça a Bomsite**: Empresa especializada em desenvolvimento web de alta performance, automações de vendas, criação de plataformas, e-commerces e integrações personalizadas para alavancar negócios digitais. Acesse: **[bomsite.shop](https://bomsite.shop)**.
 
 ---
 
 ## ✨ O que há de novo na Versão 3.1.0 PRO?
 
-| Funcionalidade | Versão Original (v3) | Versão 3.1.0 PRO (Bonsite) |
+| Funcionalidade | Versão Original (v3) | Versão 3.1.0 PRO (Bomsite) |
 | :--- | :--- | :--- |
 | **Execução em Segundo Plano** | Dependia de abrir o popup manualmente para injetar o script | **100% Automática via `content_scripts`**: Continua rodando mesmo se você der F5 na página |
 | **Identificação do Botão** | Busca de texto rígida (`+ 60 s`) | **Regex Dinâmico**: Identifica `+60s`, `+ 60s`, `+ 60 s` e atributos de acessibilidade |
@@ -76,5 +76,5 @@ A versão **PRO (v3.1.0)** foi aprimorada, refatorada e disponibilizada publicam
 ## 🤝 Créditos e Contato
 
 - **Idealização Original:** [Uélinton Morelli (@soumorelli)](https://www.instagram.com/soumorelli)
-- **Refatoração, Melhorias PRO e Manutenção:** [Bonsite.shop](https://bonsite.shop)
-- **Dúvidas, sugestões ou suporte para seu e-commerce:** Entre em contato pelo site oficial **[https://bonsite.shop](https://bonsite.shop)**.
+- **Refatoração, Melhorias PRO e Manutenção:** [Bomsite.shop](https://bomsite.shop)
+- **Dúvidas, sugestões ou suporte para seu e-commerce:** Entre em contato pelo site oficial **[https://bomsite.shop](https://bomsite.shop)**.
