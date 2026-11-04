@@ -1,0 +1,17 @@
+TikTok Shop Auto Fixar V3
+
+IMPORTANTE:
+- Desative/remova V1 e V2.
+- Carregue somente esta V3.
+
+Instalação:
+1. Extraia o ZIP.
+2. chrome://extensions
+3. Ative Modo do desenvolvedor.
+4. Carregar sem compactação.
+5. Selecione a pasta tiktok-auto-fixar-v3.
+6. Abra/recarregue o TikTok Shop Console de LIVE.
+7. Abra a extensão e clique ATIVAR AUTO FIXAR.
+
+A V3 usa chrome.scripting.executeScript no MAIN world da aba atual.
+Ela procura o botão pelo texto '+ 60 s' e executa button.click(), como no teste manual do Console.
