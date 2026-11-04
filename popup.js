@@ -1,110 +1,128 @@
+// popup.js - Gerencia interface do usuário e preferências
 
 const $ = id => document.getElementById(id);
-let currentTabId = null;
 
-async function getTab() {
-  const [tab] = await chrome.tabs.query({active:true,currentWindow:true});
-  currentTabId = tab?.id;
-  return tab;
-}
-
-async function exec(func, args=[]) {
-  const tab = await getTab();
-  if (!tab?.id || !tab.url?.startsWith("https://shop.tiktok.com/"))
-    throw new Error("Abra uma página do TikTok Shop primeiro.");
-  return chrome.scripting.executeScript({
-    target:{tabId:tab.id},
-    world:"MAIN",
-    func,
-    args
-  });
-}
-
-function installRunner(enabled) {
-  // Esta função é serializada pelo Chrome e executada no MAIN world da página.
-  if (!window.__TT_AUTO_FIXAR_V3_STATE__) {
-    window.__TT_AUTO_FIXAR_V3_STATE__ = {
-      enabled:false, count:0, last:null, found:false, timer:null, busyUntil:0
-    };
+async function getActiveTikTokTab() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (tab?.url && tab.url.startsWith("https://shop.tiktok.com/")) {
+    return tab;
   }
-  const s = window.__TT_AUTO_FIXAR_V3_STATE__;
-  s.enabled = enabled;
-
-  function findButton() {
-    const buttons = Array.from(document.querySelectorAll("button"));
-    return buttons.find(btn => {
-      const txt = (btn.innerText || btn.textContent || "").replace(/\s+/g," ").trim();
-      return txt.includes("+ 60 s") && !btn.disabled && btn.getAttribute("aria-disabled") !== "true";
-    }) || null;
-  }
-
-  function tick() {
-    const b = findButton();
-    s.found = !!b;
-    if (!s.enabled || !b || Date.now() < s.busyUntil) return;
-
-    // Mesma ação que funcionou manualmente no Console.
-    b.click();
-    s.count += 1;
-    s.last = new Date().toLocaleTimeString();
-    s.busyUntil = Date.now() + 8000;
-  }
-
-  if (!s.timer) s.timer = setInterval(tick, 1000);
-  tick();
-  return {enabled:s.enabled,count:s.count,last:s.last,found:s.found};
+  return null;
 }
 
-function readState() {
-  const s = window.__TT_AUTO_FIXAR_V3_STATE__;
-  if (!s) return {installed:false,enabled:false,count:0,last:null,found:false};
-  const buttons = Array.from(document.querySelectorAll("button"));
-  const found = buttons.some(btn =>
-    (btn.innerText || btn.textContent || "").replace(/\s+/g," ").trim().includes("+ 60 s")
-  );
-  s.found = found;
-  return {installed:true,enabled:s.enabled,count:s.count,last:s.last,found:s.found};
-}
-
-async function setEnabled(enabled) {
-  await chrome.storage.local.set({ttAutoFixarEnabled:enabled});
-  await exec(installRunner,[enabled]);
-  await refresh();
-}
-
-async function refresh() {
+// Garante que o content script esteja ativo na aba atual
+async function ensureContentScriptInjected(tabId) {
   try {
-    const stored = await chrome.storage.local.get({ttAutoFixarEnabled:false});
-    const r = await exec(readState);
-    let st = r?.[0]?.result || {};
-    if (stored.ttAutoFixarEnabled && !st.installed) {
-      const rr = await exec(installRunner,[true]);
-      st = rr?.[0]?.result || {};
+    const res = await chrome.tabs.sendMessage(tabId, { type: "PING" });
+    return res;
+  } catch (err) {
+    // Se a aba foi aberta antes de recarregar a extensão, injeta sob demanda
+    try {
+      await chrome.scripting.executeScript({
+        target: { tabId },
+        files: ["content.js"]
+      });
+      // Tenta pingar novamente
+      return await chrome.tabs.sendMessage(tabId, { type: "PING" });
+    } catch (injectErr) {
+      return null;
     }
-
-    $("toggle").textContent = stored.ttAutoFixarEnabled ? "DESATIVAR AUTO FIXAR" : "ATIVAR AUTO FIXAR";
-    $("toggle").className = stored.ttAutoFixarEnabled ? "stop" : "start";
-    $("state").textContent = st.enabled ? "ATIVO" : "DESATIVADO";
-    $("state").className = st.enabled ? "ok" : "bad";
-    $("found").textContent = st.found ? "ENCONTRADO" : "não visível agora";
-    $("found").className = st.found ? "ok" : "warn";
-    $("count").textContent = st.count ?? 0;
-    $("last").textContent = st.last || "—";
-    $("msg").textContent = st.found
-      ? "O +60s está visível. Se estiver ativo, o clique é enviado automaticamente."
-      : "Aguardando o TikTok exibir +60s.";
-  } catch(e) {
-    $("state").textContent = "ERRO";
-    $("state").className = "bad";
-    $("msg").textContent = e.message || String(e);
   }
 }
 
+async function render() {
+  const data = await chrome.storage.local.get({
+    ttAutoFixarEnabled: false,
+    clickCount: 0,
+    lastClickTime: null,
+    buttonFound: false,
+    cooldownSeconds: 8,
+    soundEnabled: true
+  });
+
+  const isEnabled = Boolean(data.ttAutoFixarEnabled);
+  const tab = await getActiveTikTokTab();
+
+  // Botão Principal
+  $("toggle").textContent = isEnabled ? "DESATIVAR AUTO FIXAR" : "ATIVAR AUTO FIXAR";
+  $("toggle").className = "main-btn " + (isEnabled ? "stop" : "start");
+
+  // Status
+  $("state").textContent = isEnabled ? "ATIVO" : "DESATIVADO";
+  $("state").className = isEnabled ? "ok" : "bad";
+
+  // Contador e Último Clique
+  $("count").textContent = data.clickCount ?? 0;
+  $("last").textContent = data.lastClickTime || "—";
+
+  // Configurações
+  $("selCooldown").value = String(data.cooldownSeconds);
+  $("chkSound").checked = Boolean(data.soundEnabled);
+
+  // Status do Botão na página
+  if (!tab) {
+    $("found").textContent = "Fora do TikTok Shop";
+    $("found").className = "warn";
+    $("msg").textContent = "Abra ou mude para a aba do TikTok Shop Live Console.";
+    return;
+  }
+
+  // Ping na página para status ao vivo
+  const pingRes = await ensureContentScriptInjected(tab.id);
+  const isFound = pingRes?.buttonFound ?? data.buttonFound;
+
+  if (isFound) {
+    $("found").textContent = "DETECTADO (+60s)";
+    $("found").className = "ok";
+    $("msg").textContent = isEnabled
+      ? "Tudo pronto! O auto-fixar renovará o produto continuamente."
+      : "Botão encontrado. Clique em 'ATIVAR' para começar.";
+  } else {
+    $("found").textContent = "Não visível agora";
+    $("found").className = "warn";
+    $("msg").textContent = isEnabled
+      ? "Monitorando a tela... O clique será dado assim que o botão aparecer."
+      : "Aguardando o botão +60s aparecer na live.";
+  }
+}
+
+// Alternar Ativar / Desativar
 $("toggle").onclick = async () => {
-  const x = await chrome.storage.local.get({ttAutoFixarEnabled:false});
-  try { await setEnabled(!x.ttAutoFixarEnabled); }
-  catch(e){ $("msg").textContent=e.message || String(e); }
+  const data = await chrome.storage.local.get({ ttAutoFixarEnabled: false });
+  const newState = !data.ttAutoFixarEnabled;
+  await chrome.storage.local.set({ ttAutoFixarEnabled: newState });
+
+  const tab = await getActiveTikTokTab();
+  if (tab?.id) {
+    await ensureContentScriptInjected(tab.id);
+  }
+  await render();
 };
 
-refresh();
-setInterval(refresh,1000);
+// Zerar contador
+$("btnReset").onclick = async () => {
+  await chrome.storage.local.set({ clickCount: 0 });
+  await render();
+};
+
+// Salvar tempo de cooldown
+$("selCooldown").onchange = async () => {
+  const cooldownSeconds = Number($("selCooldown").value) || 8;
+  await chrome.storage.local.set({ cooldownSeconds });
+};
+
+// Salvar preferência de som
+$("chkSound").onchange = async () => {
+  await chrome.storage.local.set({ soundEnabled: $("chkSound").checked });
+};
+
+// Atualiza a tela automaticamente se o script em segundo plano mudar dados no storage
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local") {
+    render();
+  }
+});
+
+// Renderização inicial e atualização periódica enquanto o popup estiver aberto
+render();
+setInterval(render, 1000);

@@ -1,17 +1,27 @@
-TikTok Shop Auto Fixar V3
+=========================================
+TikTok Shop Auto Fixar PRO (Versão 3.1.0)
+=========================================
 
-IMPORTANTE:
-- Desative/remova V1 e V2.
-- Carregue somente esta V3.
+MELHORIAS APLICADAS:
+1. Execução Automática e Contínua (Content Script):
+   - Não depende mais de manter o popup aberto ou reinjetar a cada F5.
+   - O monitoramento carrega automaticamente na página da Live.
+2. Reconhecimento Flexível (Regex):
+   - Encontra o botão independentemente do espaçamento (+60s, + 60s, +60 s).
+3. Disparo Robusto de Eventos:
+   - Simula a sequência completa de ponteiro e clique para compatibilidade total com a interface do TikTok.
+4. Badge na Barra do Chrome:
+   - Mostra no ícone da extensão o status (ON e contador de renovações) sem precisar abrir o popup.
+5. Configurações no Popup:
+   - Ajuste do intervalo de cooldown (5s, 8s, 10s, 15s).
+   - Opção de alerta sonoro (bip sutil ao renovar com sucesso).
+   - Botão para zerar o contador de cliques.
 
-Instalação:
-1. Extraia o ZIP.
-2. chrome://extensions
-3. Ative Modo do desenvolvedor.
-4. Carregar sem compactação.
-5. Selecione a pasta tiktok-auto-fixar-v3.
-6. Abra/recarregue o TikTok Shop Console de LIVE.
-7. Abra a extensão e clique ATIVAR AUTO FIXAR.
-
-A V3 usa chrome.scripting.executeScript no MAIN world da aba atual.
-Ela procura o botão pelo texto '+ 60 s' e executa button.click(), como no teste manual do Console.
+Instalação / Atualização no Chrome:
+1. Abra o Chrome e vá em: chrome://extensions
+2. Ative o "Modo do desenvolvedor" (canto superior direito).
+3. Se a extensão já estiver carregada, clique no ícone de "Atualizar" (círculo) no card dela.
+   Se não estiver, clique em "Carregar sem compactação" e selecione esta pasta:
+   C:\01-ProjetosCle\01-Lives_TikTok\tiktok-auto-fixar-v3-creditos
+4. Abra o Console de LIVE no TikTok Shop (https://shop.tiktok.com).
+5. Abra a extensão e clique em "ATIVAR AUTO FIXAR".

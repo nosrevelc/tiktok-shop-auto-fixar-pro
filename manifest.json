@@ -1,18 +1,32 @@
 {
   "manifest_version": 3,
-  "name": "TikTok Shop Auto Fixar",
-  "version": "3.0.0",
-  "description": "Auto renova o botão +60s no TikTok Shop LIVE.",
+  "name": "TikTok Shop Auto Fixar Pro",
+  "version": "3.1.0",
+  "description": "Auto renova o botão +60s no TikTok Shop LIVE automaticamente em segundo plano.",
   "permissions": [
-    "scripting",
     "storage",
+    "scripting",
     "activeTab"
   ],
   "host_permissions": [
     "https://shop.tiktok.com/*"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://shop.tiktok.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "TikTok Auto Fixar"
+    "default_title": "TikTok Auto Fixar Pro"
   }
 }
